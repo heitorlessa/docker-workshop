@@ -25,6 +25,6 @@ Automating Docker deployments | Building your first deployment pipeline | Advanc
     - `docker pull python`
     - `docker pull redis`
     - `docker pull postgres`
-    - `docker pull jpetaz`
+    - `docker pull jpetazzo/trainingwheels`
 4. Create EC2 Instance using [ECS Optimized AMI](docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 
