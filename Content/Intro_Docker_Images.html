@@ -271,19 +271,105 @@
                                 <section class="normal markdown-section">
                                 
                                 <h2 id="first-dockerfile">First Dockerfile</h2>
-<p>flask hello world app
-copy file to container and build it</p>
-<p>Flask hello world</p>
-<pre><code class="lang-bash">FROM ubuntu:latest
+<p>We&apos;ll create our first new image on top of <code>Ubuntu</code> using a simple <code>Python Flask</code>. </p>
+<p>To do this, create a new file named <code>Dockerfile</code> and use the following contents:</p>
+<pre><code class="lang-dockerfile"><span class="hljs-keyword">FROM</span> ubuntu:latest
+<span class="hljs-keyword">RUN</span> <span class="bash">apt-get update -y \
+    &amp;&amp; apt-get install -y python-pip python-dev build-essential
+</span><span class="hljs-keyword">COPY</span> <span class="bash">./app.py /app/
+</span><span class="hljs-keyword">COPY</span> <span class="bash">./requirements.txt /app/
+</span><span class="hljs-keyword">RUN</span> <span class="bash">pip install -r /app/requirements.txt
+</span><span class="hljs-keyword">CMD</span> <span class="bash">[<span class="hljs-string">&quot;python&quot;</span>, <span class="hljs-string">&quot;/app/app.py&quot;</span>]
+</span></code></pre>
+<p>Create the following files exactly where you created your <code>Dockerfile</code> as they&apos;ll be copied into your Docker image upon build:</p>
+<p><strong>app.py</strong></p>
+<pre><code class="lang-python"><span class="hljs-keyword">from</span> flask <span class="hljs-keyword">import</span> Flask
+<span class="hljs-keyword">from</span> flask <span class="hljs-keyword">import</span> jsonify
+app = Flask(__name__)
+
+<span class="hljs-meta">@app.route(&apos;/&apos;)</span>
+<span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">hello_world</span><span class="hljs-params">()</span>:</span>
+    message = {
+        <span class="hljs-string">&quot;message&quot;</span>: <span class="hljs-string">&quot;Flask in Docker!!!&quot;</span>
+    }
+
+    <span class="hljs-keyword">return</span> jsonify(message)
+
+<span class="hljs-keyword">if</span> __name__ == <span class="hljs-string">&apos;__main__&apos;</span>:
+    app.run(debug=<span class="hljs-keyword">True</span>,host=<span class="hljs-string">&apos;0.0.0.0&apos;</span>)
+</code></pre>
+<p><strong>requirements.txt</strong></p>
+<pre><code class="lang-python">Flask==<span class="hljs-number">0.12</span><span class="hljs-number">.2</span>
+</code></pre>
+<p>Let&apos;s now go ahead and build your first docker image by running:</p>
+<pre><code class="lang-bash">docker build -t <span class="hljs-string">&quot;flask-hello&quot;</span> .
+</code></pre>
+<p>If everything went OK, you should end up with similar message at the bottom:</p>
+<pre><code class="lang-bash">Removing intermediate container 858e0bb5f172
+Step 6/6 : CMD python /app/app.py
+ ---&gt; Running <span class="hljs-keyword">in</span> f53090a507ce
+ ---&gt; 97b0a3b653f0
+Removing intermediate container f53090a507ce
+Successfully built 97b0a3b653f0
+Successfully tagged flask-hello:latest
+</code></pre>
+<p>Let&apos;s run this container and access it right after:</p>
+<pre><code class="lang-bash">docker run <span class="hljs-_">-d</span> -p 80:5000 flask-hello
+</code></pre>
+<p>You should now be able to access this Flask application by either opening the browser on <code>localhost:80</code> or simply using cURL:</p>
+<pre><code class="lang-bash">curl localhost:80 -v
+</code></pre>
+<blockquote>
+<p><strong>Something to try out</strong></p>
+</blockquote>
+<ul>
+<li>Find out how big this image is</li>
+<li>Add metadata into this image to tell who the owner is</li>
+</ul>
+<h3 id="quick-optimizations">Quick optimizations</h3>
+<p>As you probably noticed this image is quite big for simply returning a hello world message. There are several ways we could optimize this, but for now, replace Dockerfile contents with the following and let&apos;s dive into what that means:</p>
+<pre><code class="lang-dockerfile"><span class="hljs-keyword">FROM</span> python:<span class="hljs-number">3.6</span>.<span class="hljs-number">2</span>-alpine
+<span class="hljs-keyword">COPY</span> <span class="bash">app.py /app/
+</span><span class="hljs-keyword">COPY</span> <span class="bash">requirements.txt /app/
+</span><span class="hljs-keyword">WORKDIR</span> <span class="bash">/app
+</span><span class="hljs-keyword">RUN</span> <span class="bash">pip install --no-cache-dir -r requirements.txt
+</span><span class="hljs-keyword">EXPOSE</span> <span class="hljs-number">5000</span>
+ENTRYPOINT [<span class="hljs-string">&quot;python&quot;</span>, <span class="hljs-string">&quot;app.py&quot;</span>]
+</code></pre>
+<p>FROM ubuntu:latest
 RUN apt-get update -y \
     &amp;&amp; apt-get install -y python-pip python-dev build-essential
-COPY ./app.py /app
-COPY ./requirements.txt /app
-WORKDIR /app
-RUN pip install -r requirements.txt
-ENTRYPOINT [<span class="hljs-string">&quot;python&quot;</span>]
-CMD [<span class="hljs-string">&quot;app.py&quot;</span>]
-</code></pre>
+COPY ./app.py /app/
+COPY ./requirements.txt /app/
+RUN pip install -r /app/requirements.txt
+CMD [&quot;python&quot;, &quot;/app/app.py&quot;]</p>
+<p>Here&apos;s the optimizations we&apos;ve done:</p>
+<table>
+<thead>
+<tr>
+<th>Optimization</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>FROM python:3.6.2-alpine</strong></td>
+<td>Alpine is a minimalist Linux OS that helps us reduce Docker images considerably, and this already has python installed</td>
+</tr>
+<tr>
+<td><strong>WORKDIR /app</strong></td>
+<td>Workdir works similar to <code>cd</code> as it allows us to change the current directory so we can remove <code>/app</code> preffixes</td>
+</tr>
+<tr>
+<td>RUN pip install <strong>--no-cache-dir</strong> -r requirements.txt</td>
+<td><code>--no-cache-dir</code> ensures pip doesn&apos;t save any dependencies locally in the docker image filesystem</td>
+</tr>
+<tr>
+<td>EXPOSE 5000</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h2 id="building-via-container">Building via container</h2>
 <p>using a container to build a Go app
 create an image that will use app binary</p>
@@ -333,7 +419,7 @@ create an image that will use app binary</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Docker Images","level":"1.1.2","depth":2,"next":{"title":"Docker Networking","level":"1.1.3","depth":2,"path":"Content/Docker_Networking.md","ref":"Content/Docker_Networking.md","articles":[]},"previous":{"title":"Intro to Docker","level":"1.1.1","depth":2,"path":"Content/Intro_Docker.md","ref":"Content/Intro_Docker.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Content/Intro_Docker_Images.md","mtime":"2017-09-19T08:38:10.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-09-19T08:39:02.706Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Docker Images","level":"1.1.2","depth":2,"next":{"title":"Docker Networking","level":"1.1.3","depth":2,"path":"Content/Docker_Networking.md","ref":"Content/Docker_Networking.md","articles":[]},"previous":{"title":"Intro to Docker","level":"1.1.1","depth":2,"path":"Content/Intro_Docker.md","ref":"Content/Intro_Docker.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Content/Intro_Docker_Images.md","mtime":"2017-09-19T12:23:07.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-09-19T12:25:05.950Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
