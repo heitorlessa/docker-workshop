@@ -1,5 +1,6 @@
 > **External links**
 
+* [The Hitchhikers Guide on Amazon ECS and Docker](http://start.jcolemorrison.com/the-hitchhikers-guide-to-aws-ecs-and-docker/)
 * [Github - Awesome-ECS](https://github.com/nathanpeck/awesome-ecs)
 * [Docker Basics on ECS](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/docker-basics.html)
 * [ECS - Blue Green Reference Architecture](https://github.com/awslabs/ecs-blue-green-deployment)
@@ -16,6 +17,7 @@
     - [Operation Automation and Infrastructure Management with Amazon ECS](https://www.youtube.com/watch?v=EbLhfiXVP6Q)
     - [Operations Management on Amazon ECS](//www.youtube.com/watch?v=8SEKRhgl_xw)
 * [Docker Logging 101](https://medium.com/@yoanis_gil/logging-with-docker-part-1-b23ef1443aac)
+* [Docker Service Discovery using DNS on AWS](https://github.com/awslabs/ecs-refarch-service-discovery/)
 
 > **Samples**
 
