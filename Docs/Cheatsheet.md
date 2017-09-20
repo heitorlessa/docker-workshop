@@ -73,7 +73,6 @@ docker inspect <imageId>
 # docker inspect <containerId> also works
 ```
 
-
 **Remove all containers oneliner**
 
 ```bash
