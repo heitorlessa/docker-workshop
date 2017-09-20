@@ -297,6 +297,20 @@
 docker run <span class="hljs-_">-d</span> --net testing --name db redis
 docker run <span class="hljs-_">-d</span> --net testing --name app flask
 </code></pre>
+<p><strong>Create a Network</strong></p>
+<pre><code class="lang-bash">docker network create &lt;networkName&gt;
+</code></pre>
+<p><strong>List existing networks</strong></p>
+<pre><code class="lang-bash">docker network ls
+</code></pre>
+<p><strong>Install Ping and other Networking utilities</strong></p>
+<pre><code class="lang-bash">apt-get update -y \
+    &amp;&amp; apt-get install iputils-ping net-tools -y
+</code></pre>
+<p><strong>Inspect Docker Image configuration</strong></p>
+<pre><code class="lang-bash">docker inspect &lt;imageId&gt;
+<span class="hljs-comment"># docker inspect &lt;containerId&gt; also works</span>
+</code></pre>
 <p><strong>Remove all containers oneliner</strong></p>
 <pre><code class="lang-bash">docker rm $(docker ps <span class="hljs-_">-a</span> -q)
 </code></pre>
@@ -343,7 +357,7 @@ docker run <span class="hljs-_">-d</span> --net testing --name app flask
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Cheat Sheet","level":"1.4","depth":1,"previous":{"title":"Resources","level":"1.3","depth":1,"path":"Docs/Resources.md","ref":"Docs/Resources.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Docs/Cheatsheet.md","mtime":"2017-09-19T12:22:25.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-09-19T12:25:05.950Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Cheat Sheet","level":"1.4","depth":1,"previous":{"title":"Resources","level":"1.3","depth":1,"path":"Docs/Resources.md","ref":"Docs/Resources.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Docs/Cheatsheet.md","mtime":"2017-09-20T08:04:16.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-09-20T08:04:51.856Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>

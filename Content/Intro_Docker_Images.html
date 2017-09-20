@@ -336,13 +336,6 @@ Successfully tagged flask-hello:latest
 </span><span class="hljs-keyword">EXPOSE</span> <span class="hljs-number">5000</span>
 ENTRYPOINT [<span class="hljs-string">&quot;python&quot;</span>, <span class="hljs-string">&quot;app.py&quot;</span>]
 </code></pre>
-<p>FROM ubuntu:latest
-RUN apt-get update -y \
-    &amp;&amp; apt-get install -y python-pip python-dev build-essential
-COPY ./app.py /app/
-COPY ./requirements.txt /app/
-RUN pip install -r /app/requirements.txt
-CMD [&quot;python&quot;, &quot;/app/app.py&quot;]</p>
 <p>Here&apos;s the optimizations we&apos;ve done:</p>
 <table>
 <thead>
@@ -366,13 +359,61 @@ CMD [&quot;python&quot;, &quot;/app/app.py&quot;]</p>
 </tr>
 <tr>
 <td>EXPOSE 5000</td>
-<td></td>
+<td>Exposes default Flask port so it can be automatically exposed when using <code>docker -P</code> and can also be inspected at runtime</td>
+</tr>
+<tr>
+<td>ENTRYPOINT [&quot;python&quot;, &quot;app.py&quot;]</td>
+<td>Entrypoint is commonly used to run scripts or to orchestrate multiple steps needed before running an application - Also useful to easily override at container runtime with <code>--entrypoint=&lt;newValue&gt;</code></td>
 </tr>
 </tbody>
 </table>
 <h2 id="building-via-container">Building via container</h2>
-<p>using a container to build a Go app
-create an image that will use app binary</p>
+<p>To understand why this is useful, let&apos;s first have a look at the official <a href="https://hub.docker.com/_/golang/" target="_blank">Golang Docker Hub page</a></p>
+<p>Without this, this is how a Dockerfile that only builds a static go binary would look like</p>
+<pre><code class="lang-dockerfile"><span class="hljs-keyword">FROM</span> golang:latest 
+<span class="hljs-keyword">RUN</span> <span class="bash">mkdir /app 
+</span><span class="hljs-keyword">ADD</span> <span class="bash">. /app/ 
+</span><span class="hljs-keyword">WORKDIR</span> <span class="bash">/app 
+</span><span class="hljs-keyword">RUN</span> <span class="bash">go build -o main .
+</span><span class="hljs-keyword">RUN</span> <span class="bash">CGO_ENABLED=0 GOOS=linux go build <span class="hljs-_">-a</span> -tags netgo -ldflags <span class="hljs-string">&apos;-w&apos;</span> -o app .
+</span></code></pre>
+<p>From here, you&apos;d have to create a new image from this Dockerfile, and run it in order to build a new app. But what if we could simply build at runtime and have a static file generated in any directory once the execution finishes?</p>
+<p>Let&apos;s try this - Create a new file called <code>main.go</code> with the following contents:</p>
+<pre><code class="lang-golang"><span class="hljs-keyword">package</span> main
+
+<span class="hljs-keyword">import</span> (
+        <span class="hljs-string">&quot;fmt&quot;</span>
+        <span class="hljs-string">&quot;net/http&quot;</span>
+        <span class="hljs-string">&quot;runtime&quot;</span>
+)
+
+<span class="hljs-keyword">func</span> indexHandler(w http.ResponseWriter, r *http.Request) {
+        fmt.Fprintf(w, <span class="hljs-string">&quot;hello world, I&apos;m running on %s with an %s CPU &quot;</span>, runtime.GOOS, runtime.GOARCH)
+
+}
+
+<span class="hljs-keyword">func</span> main() {
+        http.HandleFunc(<span class="hljs-string">&quot;/&quot;</span>, indexHandler)
+        http.ListenAndServe(<span class="hljs-string">&quot;:8080&quot;</span>, <span class="hljs-literal">nil</span>)
+}
+</code></pre>
+<p>Let&apos;s now build a static binary out of it compiled to run on Linux:</p>
+<pre><code class="lang-bash">docker run --rm \
+    -v <span class="hljs-string">&quot;<span class="hljs-variable">$PWD</span>&quot;</span>:/usr/src/myapp \
+    -w /usr/src/myapp \
+    <span class="hljs-_">-e</span> CGO_ENABLED=0 \
+    <span class="hljs-_">-e</span> GOOS=linux \
+    golang:1.8 go build <span class="hljs-_">-a</span> -tags netgo -ldflags <span class="hljs-string">&apos;-w&apos;</span> -o app .
+</code></pre>
+<p>If everything went alright you should have a <code>app</code> executable in your current path. We can now use this in order to quickly cross-compile our app to multiple Operating Systems, and when we&apos;re ready we can simply create a minimal docker image that will be nearly as small as our static binary.</p>
+<pre><code class="lang-dockerfile"><span class="hljs-keyword">FROM</span> scratch
+<span class="hljs-keyword">ADD</span> <span class="bash">app /
+</span><span class="hljs-keyword">CMD</span> <span class="bash">[<span class="hljs-string">&quot;/app&quot;</span>]
+</span></code></pre>
+<p>Finally, we can build a new image and run it thereafter:</p>
+<pre><code class="lang-bash">docker build -t <span class="hljs-string">&quot;minimal-go&quot;</span> .
+docker run -it <span class="hljs-_">-d</span> -p 80:8080 minimal-go
+</code></pre>
 <h2 id="building-with-maven">Building with Maven</h2>
 <pre><code class="lang-bash">mvn package -Pdocker
 </code></pre>
@@ -419,7 +460,7 @@ create an image that will use app binary</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Docker Images","level":"1.1.2","depth":2,"next":{"title":"Docker Networking","level":"1.1.3","depth":2,"path":"Content/Docker_Networking.md","ref":"Content/Docker_Networking.md","articles":[]},"previous":{"title":"Intro to Docker","level":"1.1.1","depth":2,"path":"Content/Intro_Docker.md","ref":"Content/Intro_Docker.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Content/Intro_Docker_Images.md","mtime":"2017-09-19T12:23:07.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-09-19T12:25:05.950Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Docker Images","level":"1.1.2","depth":2,"next":{"title":"Docker Networking","level":"1.1.3","depth":2,"path":"Content/Docker_Networking.md","ref":"Content/Docker_Networking.md","articles":[]},"previous":{"title":"Intro to Docker","level":"1.1.1","depth":2,"path":"Content/Intro_Docker.md","ref":"Content/Intro_Docker.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"Content/Intro_Docker_Images.md","mtime":"2017-09-20T08:04:16.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-09-20T08:04:51.856Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
