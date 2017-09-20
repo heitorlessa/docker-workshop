@@ -47,6 +47,31 @@ docker run -d --net testing --name db redis
 docker run -d --net testing --name app flask
 ```
 
+**Create a Network**
+
+```bash
+docker network create <networkName>
+```
+
+**List existing networks**
+
+```bash
+docker network ls
+```
+
+**Install Ping and other Networking utilities**
+
+```bash
+apt-get update -y \
+    && apt-get install iputils-ping net-tools -y
+```
+
+**Inspect Docker Image configuration**
+
+```bash
+docker inspect <imageId>
+# docker inspect <containerId> also works
+```
 
 **Remove all containers oneliner**
 
